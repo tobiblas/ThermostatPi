@@ -3,14 +3,17 @@
 from __future__ import with_statement
 from subprocess import call
 import time
+import pytz
 import sys
 import urllib2
 import threading
 from urllib2 import URLError
-import sqlite3
 import json
-import pytz
+import db
 from datetime import datetime
+
+RELAY_ON = 1
+RELAY_OFF = -1
 
 if len(sys.argv) < 2:
     print "Usage: python sense_remote_temp.py temp_home <OPTIONAL:label>"
@@ -22,8 +25,6 @@ if len(sys.argv) == 3:
 
 if not location.endswith("/"):
     location += "/"
-
-addTime = 0
 
 def fetchFrom(url, attemptsLeft):
     print "Fetching from " + url + " attempts left " + str(attemptsLeft)
@@ -40,41 +41,10 @@ def fetchFrom(url, attemptsLeft):
             print "Got response: " + body.rstrip()
             response.close()
             return body.rstrip()
-    except URLError, e:
+    except:
         if (attemptsLeft > 0):
             print "Retrying..."
             return fetchFrom(url, attemptsLeft-1)
-
-def createTables(cursor):
-    sql = "create table if not exists status (status INTEGER, timestamp INTEGER)"
-    cursor.execute(sql)
-    sql = "create table if not exists error (message TEXT, timestamp INTEGER)"
-    cursor.execute(sql)
-    sql = "create table if not exists temperature (timestamp INTEGER PRIMARY KEY, location TEXT, temp REAL, label TEXT)"
-    cursor.execute(sql)
-    sql = "create index if not exists TEMP_IDX on temperature(timestamp)"
-    cursor.execute(sql)
-
-
-def saveTemp(temperature, device):
-    global addTime
-    dbName = "/home/pi/temperature.db"
-    conn = sqlite3.connect(dbName)
-    c = conn.cursor()
-    createTables(c)
-    tz = pytz.timezone('Europe/Berlin')
-    tzOffsetInSeconds = tz.utcoffset(datetime.now()).total_seconds()
-    epoch_time = int(time.time() + tzOffsetInSeconds) + addTime
-    addTime = addTime + 1
-    sql = ""
-    if label is None:
-        sql = "insert into temperature values("+ str(epoch_time) +", \""+ device +"\", " + str(temperature) + ",null)"
-    else:
-        sql = "insert into temperature values("+ str(epoch_time) +", \""+ device +"\", " + str(temperature) + ",\"" + label + "\")"
-    print sql
-    c.execute(sql)
-    conn.commit()
-    conn.close()
 
 def fetchOutdoorTemp(myprops):
 
@@ -102,9 +72,6 @@ def getMyProps():
             myprops[k] = v
     print myprops
     return myprops
-
-def logError(error):
-    print "should log error here"
 
 def remoteFetchTemp(myprops):
     print "Fetching remote temp"
@@ -141,7 +108,7 @@ def remoteFetchTemp(myprops):
     if 'openweatherApiKey' in myprops.keys() and myprops['openweatherApiKey'].strip() != "":
         try:
             t = fetchOutdoorTemp(myprops)
-            tempDict[myprops['outdoorLocation']] = t
+            tempDict['outside'] = t
         except:
             print "Failed to get open wheather temp"
             logError("Failed to get open wheather temp")
@@ -149,20 +116,23 @@ def remoteFetchTemp(myprops):
     tempDict["average"] = float(tempSum / i)
     return tempDict
 
-def logStatus(value):
-    print "should log here"
-    #todo
+def logError(error):
+    db.logError(error)
 
-def setRelay(value):
-    if (value == 1):
+def logStatus(fromVal, toVal, average, targetTemp, threshold, outside):
+    db.saveStatus(fromVal, toVal, average, targetTemp, threshold, outside)
+
+def setRelay(fromVal, toVal, average, targetTemp, threshold, outside):
+    if (toVal == RELAY_ON):
         #turn on
-        logStatus(1)
-    elif (value == -1):
+        logStatus(fromVal, toVal, average, targetTemp, threshold, outside)
+    elif (toVal == RELAY_OFF):
         #turn off
-        logStatus(-1)
+        logStatus(fromVal, toVal, average, targetTemp, threshold, outside)
 
+# returns [status, timestamp]
 def getLastStatus():
-    return [343545454,1]
+    return db.getLastStatus()
 
 def getNow():
     tz = pytz.timezone('Europe/Berlin')
@@ -172,33 +142,48 @@ def getNow():
 
 def main():
     myprops = getMyProps()
-    targetTemp = myprops['targetTemp']
-    threshold = myprops['threshold']
-    graceTimeMinutes = myprops['graceTimeMinutes']
-
-    print "getting temps"
+    targetTemp = float(myprops['targetTemp'])
+    threshold = float(myprops['threshold'])
+    graceTimeMinutes = int(myprops['graceTimeMinutes'])
     temps = remoteFetchTemp(myprops)
-    print temps
+    average = temps.get("average")
+    outside = temps.get("outside")
 
-    print "getting last status"
     lastStatus = getLastStatus()
-    if (temps is None):
-        logError("ERROR. Could not get temp data")
+    lastStatusChangeTime = db.getLastStatusChange()
+    print "last status " + str(lastStatus) + ", lastStatusChangeTime " + str(lastStatusChangeTime)
+
+    #empty database
+    if (lastStatusChangeTime == 0):
+        setRelay(0, RELAY_ON, average, targetTemp, threshold, outside)
+        lastStatusChangeTime = db.getLastStatusChange()
+        lastStatus = getLastStatus()
+
+    if (temps is None or average is None or average < 15):
+        logError("ERROR. Could not get temp data. Will set relay on after gracetime: " + str(graceTimeMinutes) + " minutes. Average temp was " + str(average))
         #if last status > graceTimeMinutes then make sure relay is on.
-        if (getNow() > lastStatus[0] + graceTimeMinutes*60):
-            if (lastStatus[1] != 1):
-                setRelay(1)
+        if (getNow() > lastStatusChangeTime + graceTimeMinutes*60):
+            setRelay(lastStatus, RELAY_ON, average, targetTemp, threshold, outside)
         return;
 
     # if last status < gracetime then return.
-    if (getNow() < lastStatus[0] + graceTimeMinutes*60):
+    print "now: " + str(getNow()) + " turnpoint: " + str(lastStatusChangeTime + graceTimeMinutes*60)
+    if (getNow() < lastStatusChangeTime + graceTimeMinutes*60):
         print "gracetime not over yet. Return"
         return
 
-    
-    # if average within threshold of targetTemp then do nothing and log STATUS_QUO
-    # if average < targetTemp then check status. If On then turnOffRelay if gracetime met and log else log STATUS_QUO
-    # if average < targetTemp then check status. If On then turnOffRelay if gracetime met and log else log STATUS_QUO
 
+    # if average within threshold of targetTemp then do nothing and log STATUS_QUO
+    if (average > targetTemp-threshold and average < targetTemp+threshold):
+        print "average within threshold. Do nothing"
+    # if average < targetTemp-threshold then check if relay is off. If Off then turnOn Relay if gracetime met
+    elif (average < targetTemp-threshold and lastStatus == RELAY_OFF):
+        setRelay(RELAY_OFF, RELAY_ON, average, targetTemp, threshold, outside)
+    # if average > targetTemp+threshold then check if relay is on. If On then turnOffRelay if gracetime met
+    elif (average > targetTemp+threshold and lastStatus == RELAY_ON):
+        setRelay(RELAY_ON, RELAY_OFF, average, targetTemp, threshold, outside)
+    else:
+        logStatus(lastStatus, lastStatus, average, targetTemp, threshold, outside)
+        print "No change needed"
 
 main()

@@ -45,14 +45,6 @@ else:
 
 # create thermostat.db
 
-#CREATE TABLE TEMP(
-#                       timestamp DATETIME DEFAULT CURRENT_TIMESTAMP PRIMARY KEY,
-#                       temp REAL,
-#                       inData1 REAL,
-#                       inData2 REAL,
-#                       result INTEGER  (-1 turned off, 0 status quo, 1 turned on)
-#                  ...> );
-
 print "-----------"
 
 ################# MOVE PHP PAGE TO RIGHT PLACE ###############
