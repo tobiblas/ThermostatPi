@@ -11,9 +11,11 @@ from urllib2 import URLError
 import json
 import db
 from datetime import datetime
+import RPi.GPIO as GPIO
 
 RELAY_ON = 1
 RELAY_OFF = -1
+RELAY_GPIO_PIN = 4
 
 if len(sys.argv) < 2:
     print "Usage: python sense_remote_temp.py temp_home <OPTIONAL:label>"
@@ -126,9 +128,11 @@ def setRelay(fromVal, toVal, average, targetTemp, threshold, outside):
     if (toVal == RELAY_ON):
         #turn on
         logStatus(fromVal, toVal, average, targetTemp, threshold, outside)
+        GPIO.output(RELAY_GPIO_PIN, True)
     elif (toVal == RELAY_OFF):
         #turn off
         logStatus(fromVal, toVal, average, targetTemp, threshold, outside)
+        GPIO.output(RELAY_GPIO_PIN, False)
 
 # returns [status, timestamp]
 def getLastStatus():
@@ -141,6 +145,9 @@ def getNow():
     return epochTime
 
 def main():
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(RELAY_GPIO_PIN, GPIO.OUT)
+
     myprops = getMyProps()
     targetTemp = float(myprops['targetTemp'])
     threshold = float(myprops['threshold'])
