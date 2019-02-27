@@ -1,0 +1,181 @@
+
+* {
+    box-sizing: border-box;
+}
+
+
+body {
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+body, html {
+    height: 100%;
+}
+.container {
+    display: table;
+    width: 100%;
+    height: 100%; /* this will be treated as a Minimum!
+                     It will stretch to fit content */
+}
+div.wrapper{
+    display:table-row;
+    height:0px; /* take as little as possible,
+                   while still fitting content */
+}
+.tabcontent {
+    display:table-cell;
+    height:100%; /* take as much as possible */
+}
+
+.filters {
+  width: 100%;
+  text-align: center;
+}
+
+.periodfilter {
+  display: inline-block;
+  padding: 5px;
+}
+.fromDate {
+  display: inline-block;
+  padding: 5px;
+}
+.toDate {
+  display: inline-block;
+  padding: 5px;
+}
+.dateInput {
+  width: 110px;
+}
+
+#curve_chart {
+  width:95%;
+  height:90%;
+  display: block;
+  margin: 0 auto;
+}
+
+
+body {
+    margin: 0px;
+}
+.row:after {
+    content: "";
+    clear: both;
+    display: block;
+}
+[class*="col-"] {
+    float: left;
+}
+.col-1 {width: 8.33%;}
+.col-2 {width: 16.66%;}
+.col-3 {width: 25%;}
+.col-4 {width: 33.33%;}
+.col-5 {width: 41.66%;}
+.col-6 {width: 50%;}
+.col-7 {width: 58.33%;}
+.col-8 {width: 66.66%;}
+.col-9 {width: 75%;}
+.col-10 {width: 83.33%;}
+.col-11 {width: 91.66%;}
+.col-12 {width: 100%;}
+html {
+    font-family: "Trebuchet, Arial", sans-serif;
+}
+.header {
+    background-color: #27556C;
+    color: #ffffff;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    text-align:center;
+}
+
+hr {
+    display: block;
+    height: 1px;
+    border: 0;
+    border-top: 1px solid #444444;
+    margin-top: 0;
+    margin-bottom: 0;
+    width: 100%;
+    padding: 0;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.onoffswitch {
+    position: relative; width: 95px;
+    -webkit-user-select:none; -moz-user-select:none; -ms-user-select: none;
+}
+.onoffswitch-checkbox {
+    display: none;
+}
+
+.menucheckbox {
+    display: none;
+}
+
+.menulabel {
+    background-color :#6E92A1;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    padding-left: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    display: block; overflow: hidden; cursor: pointer;
+    height: 30px;
+    color: white;
+}
+
+.unit {
+    vertical-align: bottom;
+}
+
+#filters {
+    padding: 20px 0px 20px 0px;
+}
+
+#settings {
+    margin: 20px 50px 20px 50px;
+    padding: 10px 10px 10px 10px;
+    border-width:1px;
+    border-style:solid;
+    border-color: #cccccc;
+}
+
+.temperature {
+    text-align:center;
+    padding: 20px 20px 20px 20px;
+    margin-top:20px;
+    color: #6E92A1;
+    font-size:xx-large;
+    font-style:bold
+    height: 50px;
+    line-height: 50px;
+}
+
+.temperaturelocation  {
+    text-align:center;
+    padding: 20px 20px 20px 20px;
+    margin-top:20px;
+    color: #6E92A1;
+    font-size:x-large;
+    font-style:bold
+    height: 50px;
+    line-height: 50px;
+
+}
+
+#setting {
+    padding: 10px 0px 10px 0px;
+}
+
+#alarmsettings{
+    margin-left: auto;
+    margin-right: auto;
+    width: 95px;
+}
+
+#tempHomeText, #devicesText, #deviceIPsText, #outdoorLocationText, #apiKeyText {
+    width: 100%;
+    margin: 5px 0px 0px 0px;
+}
