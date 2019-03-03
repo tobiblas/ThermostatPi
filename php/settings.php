@@ -64,13 +64,6 @@ Unit<br>
 
 </div>
 
-<div id="setting">
-Pellet boiler (changes will trigger temp measurement which is saved to database)<br>
-
-<input type="radio" name="pellet" id="pellet" value="on" onclick="setProperty('pellet', 'Pellets på')" <?php if ($config['pellet'] != NULL && $config['pellet'] == "Pellets på") { echo 'checked';} ?> ><label class="pellet" for="on">ON</label><br>
-<input type="radio" name="pellet" id="pellet" value="off" onclick="setProperty('pellet', 'Pellets av')" <?php if ($config['pellet'] != NULL && $config['pellet'] == "Pellets av") { echo 'checked';} ?> ><label class="pellet" for="off">OFF</label><br>
-
-</div>
 
 <br>
 Save each field by pressing enter.

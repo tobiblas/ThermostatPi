@@ -22,9 +22,4 @@
     }
 
     file_put_contents('admin.properties', $new_file_data);
-
-    if ($key_sent == 'pellet') {
-      $command = '/home/pi/thermometer/sense_remote_temp.py /var/www/html/thermometer/ "' . $value_sent . '"';
-      echo exec($command . ' 2>&1');
-    }
 ?>

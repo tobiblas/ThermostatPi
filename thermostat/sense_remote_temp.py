@@ -182,6 +182,7 @@ def main():
 
     # if average within threshold of targetTemp then do nothing and log STATUS_QUO
     if (average > targetTemp-threshold and average < targetTemp+threshold):
+        logStatus(lastStatus, lastStatus, average, targetTemp, threshold, outside)
         print "average within threshold. Do nothing"
     # if average < targetTemp-threshold then check if relay is off. If Off then turnOn Relay if gracetime met
     elif (average < targetTemp-threshold and lastStatus == RELAY_OFF):
