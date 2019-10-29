@@ -4,6 +4,11 @@ from datetime import datetime
 import time
 
 def createTables(cursor):
+    #electricity table. Saves price data per day. 24 hour prices per dag.
+    sql = "create table if not exists pricedata (timestamp INTEGER, price REAL)"
+    cursor.execute(sql)
+    sql = "create unique index if not exists unique_idx_pricedata on pricedata(timestamp, price)"
+    cursor.execute(sql)
     sql = "create table if not exists status (fromStatus INTEGER, toStatus INTEGER, average REAL, targetTemp REAL, threshold REAL, outside REAL, timestamp INTEGER)"
     cursor.execute(sql)
     sql = "create table if not exists error (message TEXT, timestamp INTEGER)"
@@ -15,6 +20,7 @@ def createTables(cursor):
     #sql = "create index if not exists TEMP_IDX on temperature(timestamp)"
     #cursor.execute(sql)
 
+
 def getConnection():
     #dbName = "/home/pi/temperature.db"
     dbName = "/Users/tobiblas/Sites/ThermostatPi/thermostat.db"
@@ -24,7 +30,7 @@ def getConnection():
     return (conn, cursor)
 
 def executeSql(db, sql):
-    print "executing: " + sql
+    print ("executing: " + sql)
     db[1].execute(sql)
     db[0].commit()
     db[0].close()
@@ -33,6 +39,12 @@ def getNow():
     tz = pytz.timezone('Europe/Berlin')
     tzOffsetInSeconds = tz.utcoffset(datetime.now()).total_seconds()
     epochTime = int(time.time() + tzOffsetInSeconds)
+    return epochTime
+
+def getGmtTime(timestamp):
+    tz = pytz.timezone('Europe/Berlin')
+    tzOffsetInSeconds = tz.utcoffset(datetime.now()).total_seconds()
+    epochTime = int(timestamp.timestamp() + tzOffsetInSeconds)
     return epochTime
 
 def logError(error):
@@ -49,9 +61,14 @@ def getLastStatus():
     if rows:
         result = rows[0][0]
     else:
-        print "No last status."
+        print ("No last status.")
     db[0].close()
     return result
+
+def savePrice(timestamp, price):
+    db = getConnection()
+    sql = "insert into pricedata values(" + str(getGmtTime(timestamp)) + "," + str(price) + ")"
+    executeSql(db, sql)
 
 def saveStatus(fromStatus, toStatus, average, targetTemp, threshold, outside):
     db = getConnection()
@@ -67,5 +84,5 @@ def getLastStatusChange():
     if rows:
         timestamp = rows[0][0]
     db[0].close()
-    print "last change was " + str(timestamp)
+    print ("last change was " + str(timestamp))
     return timestamp

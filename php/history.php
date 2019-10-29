@@ -6,13 +6,11 @@ google.charts.setOnLoadCallback(drawChart);
 
 function onLoadFunction() {
   document.addEventListener('DOMContentLoaded', function() {
-    let fromDate = getParameterByName('fromDate');
-    let toDate = getParameterByName('toDate');
-    if (fromDate) {
-      document.getElementById("fromDateInput").valueAsNumber = (parseInt(fromDate)* 1000);
-    }
-    if (toDate) {
-      document.getElementById("toDateInput").valueAsNumber = (parseInt(toDate)* 1000);
+    let date = getParameterByName('date');
+    if (date) {
+      document.getElementById("dateInput").valueAsNumber = (parseInt(date)* 1000);
+    } else {
+      document.getElementById('dateInput').valueAsDate = new Date();
     }
 }, false);
 
@@ -50,14 +48,16 @@ function getParameterByName(name, url) {
     return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
-function executeFilter() {
-    let fromDate = document.getElementById("fromDateInput").valueAsNumber;
-    let toDate = document.getElementById("toDateInput").valueAsNumber;
-    if (isNaN(fromDate) || isNaN(toDate)) {
-      location.href = URL_add_parameter(location.href, 'period', document.getElementById("periodSelector").value);
-    } else{
-      let href = URL_add_parameter(location.href, 'fromDate', fromDate/1000);
-      location.href = URL_add_parameter(href, 'toDate', toDate/1000);
+function executeFilter(diffFromInput) {
+    let date = document.getElementById("dateInput").valueAsNumber;
+    if (isNaN(date)) {
+      //no date selected. Use today.
+
+
+      location.href = URL_add_parameter(location.href, 'date', document.getElementById("dateInput").value);
+    } else {
+      //check value of diffFromInput and add to "date"
+      location.href = URL_add_parameter(location.href, 'date', date/1000 + (diffFromInput * 3600 * 24));
     }
 
 }
@@ -70,17 +70,12 @@ function drawChart() {
     <?php
     include("db.php");
     $period = $_GET['period'];
-    $fromDate = $_GET['fromDate'];
-    $toDate = $_GET['toDate'];
-  #  echo $period;
-#    echo $fromDate;
-#    echo $toDate;
 
     $location = "";
-    $locations = array();
-    $locationsQuery = "select distinct location from temperature";
+    $locations = array();?>
+    //$locationsQuery = "select distinct timestamp, price from pricedata";
 
-    date_default_timezone_set('GMT');
+    /*date_default_timezone_set('GMT');
     $dataPoints = array();
 
     $dataPointQuery = "";
@@ -106,7 +101,7 @@ function drawChart() {
 
     foreach ($locations as &$value) {
         $q = $dataPointQuery . $value . "'";
-        echo "/*" . $q . "*/\n";
+
         foreach ($dbh->query($q) as $row) {
             $epoch = $row[0];
             $dt = new DateTime("@$epoch");
@@ -171,7 +166,7 @@ function drawChart() {
 
     var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
 
-    chart.draw(data, options);
+    chart.draw(data, options);*/
 }
 
 </script>
@@ -191,26 +186,11 @@ function drawChart() {
 <div class="tabcontent">
   <div id="curve_chart"></div>
     <div class="filters">
-        <div class="periodfilter">
-            <select id="periodSelector">
-              <option value="7" <?php echo setSelected(7);?> >1w</option>
-              <option value="14" <?php echo setSelected(14);?> >2w</option>
-              <option value="30" <?php echo setSelected(30);?> >1m</option>
-              <option value="61" <?php echo setSelected(61);?> >2m</option>
-              <option value="91" <?php echo setSelected(91);?> >3m</option>
-              <option value="183" <?php echo setSelected(183);?> >6m</option>
-              <option value="365" <?php echo setSelected(365);?> >1y</option>
-              <option value="999" <?php echo setSelected(999);?> >All</option>
-            </select>
+      <input type="button" value="<<" onclick="executeFilter(-1);"></button>
+        <div class="date">
+          <input id="dateInput" class="dateInput" type="date" value="new Date().toDateInputValue()">
         </div>
-        <div class="fromDate">
-          <input id="fromDateInput" class="dateInput" type="date">
-        </div>
-        -
-        <div class="toDate">
-          <input id="toDateInput" class="dateInput" type="date">
-        </div>
-        <input type="button" value="OK" onclick="executeFilter();"></button>
+        <input type="button" value=">>" onclick="executeFilter(1);"></button>
     </div>
 
 
