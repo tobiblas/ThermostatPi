@@ -64,6 +64,13 @@ function executeFilter(diffFromInput) {
 
 function drawChart() {
 
+  här behvöer vi fortsätta. KOlla hur vi kan få in datan som ligger i tabellen pricedata
+  så den visas som ett linjediagram. Vissa punkter kommer vara röda. Vissa orange och andra gröna.
+
+  Sen ska vi visa termostat på och av ovanpå detta men denna datan vet jag inte om den finns sparad.
+  jo den ligger i status tabellen.
+
+
     var data = new google.visualization.DataTable();
     data.addColumn('string', 'x');
     data.addColumn({type: 'string', role: 'annotation'});

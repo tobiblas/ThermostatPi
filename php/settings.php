@@ -56,6 +56,18 @@ onkeydown="if (event.keyCode == 13) setProperty('mediumExpensiveBreakpoint', '' 
 </div>
 
 <div id="setting">
+Location to use for outdoor temperature (default is "malmo,sweden", other examples are "London", "London,UK" etc.)
+<br/><input type="text" id="outdoorLocationText" value=<?php if ($config['outdoorLocation'] != NULL) { echo '"' . $config['outdoorLocation'] . '"';} else { echo '""';} ?>
+onkeydown="if (event.keyCode == 13) setProperty('outdoorLocation', '' + document.getElementById('outdoorLocationText').value)" ><br>
+</div>
+
+<div id="setting">
+Api key for <a href="http://openweathermap.org/">openwathermap.org</a>. If no key is provided then no outdoor temp will be shown or saved
+<br/><input type="text" id="apiKeyText" value=<?php if ($config['openweatherApiKey'] != NULL) { echo '"' . $config['openweatherApiKey'] . '"';} else { echo '""';} ?>
+onkeydown="if (event.keyCode == 13) setProperty('openweatherApiKey', '' + document.getElementById('apiKeyText').value)" ><br>
+</div>
+
+<div id="setting">
 Unit<br>
 
 <input type="radio" name="unit" id="unit" value="kelvin" onclick="setProperty('unit', 'kelvin')" <?php if ($config['unit'] != NULL && $config['unit'] == "kelvin") { echo 'checked';} ?> ><label class="unit" for="kelvin">°K</label><br>
