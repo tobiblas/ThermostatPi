@@ -1,7 +1,6 @@
-
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 <script type="text/javascript">
-google.charts.load('current', {'packages':['corechart']});
+google.charts.load('current', {packages: ['corechart', 'line']});
 google.charts.setOnLoadCallback(drawChart);
 
 function onLoadFunction() {
@@ -64,117 +63,70 @@ function executeFilter(diffFromInput) {
 
 function drawChart() {
 
-  här behvöer vi fortsätta. KOlla hur vi kan få in datan som ligger i tabellen pricedata
-  så den visas som ett linjediagram. Vissa punkter kommer vara röda. Vissa orange och andra gröna.
+  //här behvöer vi fortsätta.
+  // * vi kan visa datn men den är inte från rätt datum just nu. Kolla queryn. Datum tas inte hänsyn till
+  // * Vissa punkter kommer vara röda. Vissa orange och andra gröna. Fixa detta baserat på algoritmen.
+  //Använd hitte på algoritm så länge.
 
-  Sen ska vi visa termostat på och av ovanpå detta men denna datan vet jag inte om den finns sparad.
-  jo den ligger i status tabellen.
+  // * Sen ska vi visa termostat på och av ovanpå detta men denna datan vet jag inte om den finns sparad.
+  //jo den ligger i status tabellen.
+  // * kolla bortkommenterat set cell data nedan hur man skulle kunna visa thermostat datan.
 
+  var data = new google.visualization.DataTable();
 
-    var data = new google.visualization.DataTable();
-    data.addColumn('string', 'x');
-    data.addColumn({type: 'string', role: 'annotation'});
-    <?php
-    include("db.php");
-    $period = $_GET['period'];
+  data.addColumn('number', 'time');
+  data.addColumn('number', 'price');
+  data.addColumn({'type': 'string', 'role': 'style'});
+  data.addColumn('number', 'thermometer');
 
-    $location = "";
-    $locations = array();?>
-    //$locationsQuery = "select distinct timestamp, price from pricedata";
+// Add empty rows
+data.addRows(24); //24. one for every hour + 1 for every time thermometer changes in the interval.
 
-    /*date_default_timezone_set('GMT');
-    $dataPoints = array();
+<?php
+include("db.php");
+$period = $_GET['date'];
+$dataPointQuery = "select price from pricedata"; // where timestamp > " . $fromDate . " and timestamp < " . $toDate;
 
-    $dataPointQuery = "";
-
-    if ($fromDate != null && $toDate != null && $fromDate < $toDate) {
-        $dataPointQuery = "select timestamp,temp,label from temperature where timestamp > " . $fromDate . " and timestamp < " . $toDate . " and location = '";
-        $locationsQuery = $locationsQuery . " where timestamp > " . $fromDate . " and timestamp < " . $toDate;
-    } else {
-        $fromTime = 0;
-        if ($period != null) {
-          $fromTime = time() - ($period * 24 * 60 * 60);
-        } else {
-          $fromTime = time() - (30 * 24 * 60 * 60); #show 1 month as default
-        }
-        $dataPointQuery = "select timestamp,temp,label from temperature where timestamp > " . $fromTime . " and location = '";
-        $locationsQuery = $locationsQuery . " where timestamp > " . $fromTime;
-    }
-
-    foreach ($dbh->query($locationsQuery) as $row) {
-        echo "data.addColumn('number', '" . $row[0] . "');\n";
-        array_push($locations, $row[0]);
-    }
-
-    foreach ($locations as &$value) {
-        $q = $dataPointQuery . $value . "'";
-
-        foreach ($dbh->query($q) as $row) {
-            $epoch = $row[0];
-            $dt = new DateTime("@$epoch");
-            if ($row[2] == null) {
-                $dataPoints[ $dt->format('Y-m-d H:i') ][$value] = $row[1];
-            } else {
-                $dataPoints[ $dt->format('Y-m-d H:i') ][$row[2]] = $row[1];
-                $dataPoints[ $dt->format('Y-m-d H:i') ][$value] = $row[1];
-            }
-        }
-    }
-    ksort($dataPoints);
-
-    #print_r($dataPoints);
-    #print_r($locations);
-    # k är datum, v är en ARRAY name -> temp, där name kan vara en annotation
-    foreach ($dataPoints as $k => $datapoint) {
-        echo 'data.addRow(["' . $k . '"';
-        $orderOfTemps = array();
-        array_push($orderOfTemps, null);
-        for ($x = 0; $x < sizeof($locations); $x++) {
-          array_push($orderOfTemps, null);
-        }
-        foreach ($datapoint as $locationOrLabel => $temp) {
-            if (in_array($locationOrLabel, $locations)) {
-              $indexInArray = array_search("$locationOrLabel",$locations);
-              $orderOfTemps[$indexInArray+1] = $temp;
-            } else {
-              $orderOfTemps[0] = $locationOrLabel;
-            }
-        }
-
-        $label = $orderOfTemps[0];
-        if ($label == null) {
-          echo ',null';
-        } else {
-          echo ',"' . $label . '"';
-        }
-
-        for ($x = 1; $x < sizeof($orderOfTemps); $x++) {
-          if ($orderOfTemps[$x] == null) {
-            echo ',null';
-          } else {
-            echo ',' . $orderOfTemps[$x];
-          }
-        }
-
-        echo "]";
-        echo ");\n";
-    }
-
-    ?>
-
-    var options = {
-    curveType: 'function',
-    chartArea:{top:40},
-    legend: { position: 'bottom' },
-    annotations: {
-            style: 'line'
-        }
-    };
-
-    var chart = new google.visualization.LineChart(document.getElementById('curve_chart'));
-
-    chart.draw(data, options);*/
+$i = 0;
+foreach ($dbh->query($dataPointQuery) as $row) {
+    $price = $row[0];
+    $j = 0;
+    echo 'data.setCell(' . $i . ', ' . $j . ', ' . $i . ');
+    '; //last zero is X axis value.
+    echo 'data.setCell(' . $i . ', ' . ($j+1) . ', ' . $price . ');
+    ';
+    echo 'data.setCell(' . $i . ', ' . ($j+2) . ', "point { fill-color: #a52714; }");
+    ';
+    echo 'data.setCell(' . $i . ', ' . ($j+3) . ', 0);
+    '; //TODO: last zero is thermometer on/off
+    $i = $i + 1;
 }
+?>
+
+// this is how to do to get a sågtandsdiagram for the thermometer value.
+//data.setCell(1, 0, 0.001);
+//data.setCell(1, 1, 32);
+//data.setCell(0, 2, 'point { fill-color: #a52714; }');
+//data.setCell(1, 3, 55);
+
+  var options = {
+    hAxis: {
+      title: 'Time'
+    },
+    vAxis: {
+      title: 'Price'
+    },
+    series: {
+      0: {pointSize: 5}
+    },
+    legend: { position: 'bottom' }
+  };
+
+  var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+  chart.draw(data, options);
+}
+    //date_default_timezone_set('GMT');
+    //ksort($dataPoints);
 
 </script>
 
@@ -191,7 +143,7 @@ function drawChart() {
 ?>
 
 <div class="tabcontent">
-  <div id="curve_chart"></div>
+  <div id="chart_div"></div>
     <div class="filters">
       <input type="button" value="<<" onclick="executeFilter(-1);"></button>
         <div class="date">
