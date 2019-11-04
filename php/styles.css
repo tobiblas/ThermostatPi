@@ -64,6 +64,12 @@ div.wrapper{
   width: 130px;
 }
 
+.averagePrice {
+  padding-top:30px;
+  padding-bottom:10px;
+  text-align: center;
+}
+
 #curve_chart {
   width:95%;
   height:90%;
