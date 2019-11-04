@@ -9,20 +9,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script>
-/*function fetch_temp()
-{
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.onreadystatechange = function() {
-        if (xmlHttp.readyState == 4) {
-            if ( xmlHttp.status != 200) {
-                alert("FAILED TO GET TEMP!");
-            }
-            alert (xmlHttp.responseText);
-        }
-    }
-    xmlHttp.open("GET", "get_temps.php", true); // true for asynchronous
-    xmlHttp.send(null);
-}*/
 
 function menuselected(itemselected) {
     var url = window.location.href;

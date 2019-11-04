@@ -28,11 +28,11 @@ foreach ($dbh->query($logsQuery) as $row) {
 <div class="logspaging">
 <?php
 if ($page > 1) {
-  echo '<a href="?menuitem=2&pageSize=' . $pageSize . '&page=' . ($page-1) .'"> << </a>';
+  echo '<a href="?menuitem=3&pageSize=' . $pageSize . '&page=' . ($page-1) .'"> << </a>';
 }
 echo " | " . $page . " | ";
 if ($results > 0) {
-  echo '<a href="?menuitem=2&pageSize=' . $pageSize . '&page=' . ($page+1) .'"> >> </a>';
+  echo '<a href="?menuitem=3&pageSize=' . $pageSize . '&page=' . ($page+1) .'"> >> </a>';
 }
 ?>
 </div>

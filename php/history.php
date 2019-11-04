@@ -47,12 +47,14 @@ function getParameterByName(name, url) {
     return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
+function loadNewDate() {
+    location.href = URL_add_parameter(location.href, 'date', new Date(document.getElementById("dateInput").value).getTime()/1000);
+}
+
 function executeFilter(diffFromInput) {
     let date = document.getElementById("dateInput").valueAsNumber;
     if (isNaN(date)) {
       //no date selected. Use today.
-
-
       location.href = URL_add_parameter(location.href, 'date', document.getElementById("dateInput").value);
     } else {
       //check value of diffFromInput and add to "date"
@@ -62,56 +64,94 @@ function executeFilter(diffFromInput) {
 }
 
 function drawChart() {
-
-  //här behvöer vi fortsätta.
-  // * vi kan visa datn men den är inte från rätt datum just nu. Kolla queryn. Datum tas inte hänsyn till
-  // * Vissa punkter kommer vara röda. Vissa orange och andra gröna. Fixa detta baserat på algoritmen.
-  //Använd hitte på algoritm så länge.
-
-  // * Sen ska vi visa termostat på och av ovanpå detta men denna datan vet jag inte om den finns sparad.
-  //jo den ligger i status tabellen.
-  // * kolla bortkommenterat set cell data nedan hur man skulle kunna visa thermostat datan.
-
   var data = new google.visualization.DataTable();
 
   data.addColumn('number', 'time');
   data.addColumn('number', 'price');
   data.addColumn({'type': 'string', 'role': 'style'});
   data.addColumn('number', 'thermometer');
+  data.addColumn('number', 'average');
+  data.addColumn({'type': 'string', 'role': 'style'});
 
-// Add empty rows
-data.addRows(24); //24. one for every hour + 1 for every time thermometer changes in the interval.
+  // Add empty rows
+  data.addRows(24);
 
 <?php
 include("db.php");
-$period = $_GET['date'];
-$dataPointQuery = "select price from pricedata"; // where timestamp > " . $fromDate . " and timestamp < " . $toDate;
+date_default_timezone_set('GMT');
+$theDate = $_GET['date'] != null ? $_GET['date'] : null;
+if ($theDate == null) {
+  $dt = new DateTime();
+  $dt = $dt->setTime(0,0); // hour, minutes, seconds, micros
+  $theDate = $dt->getTimestamp();
+}
+
+$fromDate = $theDate - 1;
+$toDate = $theDate + 3600 * 24 -1;
+$dataPointQuery = "select price from pricedata where timestamp > " . $fromDate . " and timestamp < " . $toDate;
+$averagePrice = 0;
+$maxValue = 0;
+
+//This loop is just to get the average price.
+$i = 0;
+foreach ($dbh->query($dataPointQuery) as $row) {
+    $i = $i + 1;
+    $averagePrice = $averagePrice + $row[0];
+    $maxValue = $row[0] > $maxValue ? $row[0] : $maxValue;
+}
+if ($i != 0) {
+  $averagePrice = $averagePrice / $i;
+}
+
+//get previous thermostatValue (toStatus for last thermostat change)
+$query = "select toStatus from status where timestamp < " . $fromDate;
+$lastThermostatValue = $dbh->query($query)->fetch()[0];
+$thermostatValue = $toStatus == -1 ? 0 : $maxValue;
+$normalDot = "#109618";
+$redDot = "#DC3912";
+$yellowDot = "#FF9900";
 
 $i = 0;
 foreach ($dbh->query($dataPointQuery) as $row) {
     $price = $row[0];
     $j = 0;
+    $fromTime = $fromDate + ($i * 3600);
+    $toTime = $fromDate + (($i+1) * 3600);
+    if ($i != 0) {
+      $query = "select toStatus from status where timestamp >= " . $fromTime . " and timestamp < " . $toTime . " order by timestamp desc limit 1";
+      $newThermostatValue = $dbh->query($query)->fetch()[0];
+      if ($newThermostatValue != null) {
+          $thermostatValue = $newThermostatValue == -1 ? 0 : $maxValue;
+      }
+    }
+
+    $dotColor = $normalDot;
+    if ($price > 1.2 * $averagePrice) {
+        $dotColor = $redDot;
+    } else if ($price > 1.1 * $averagePrice) {
+        $dotColor = $yellowDot;
+    }
+
     echo 'data.setCell(' . $i . ', ' . $j . ', ' . $i . ');
     '; //last zero is X axis value.
     echo 'data.setCell(' . $i . ', ' . ($j+1) . ', ' . $price . ');
     ';
-    echo 'data.setCell(' . $i . ', ' . ($j+2) . ', "point { fill-color: #a52714; }");
+    echo 'data.setCell(' . $i . ', ' . ($j+2) . ', "point { fill-color: ' . $dotColor . '; }");
     ';
-    echo 'data.setCell(' . $i . ', ' . ($j+3) . ', 0);
-    '; //TODO: last zero is thermometer on/off
+    echo 'data.setCell(' . $i . ', ' . ($j+3) . ', ' . $thermostatValue . ');
+    ';
+    echo 'data.setCell(' . $i . ', ' . ($j+4) . ', ' . $averagePrice . ');
+    ';
     $i = $i + 1;
 }
 ?>
 
-// this is how to do to get a sågtandsdiagram for the thermometer value.
-//data.setCell(1, 0, 0.001);
-//data.setCell(1, 1, 32);
-//data.setCell(0, 2, 'point { fill-color: #a52714; }');
-//data.setCell(1, 3, 55);
-
   var options = {
     hAxis: {
-      title: 'Time'
+      title: 'Time',
+      minValue: 0,
+      maxValue: 24,
+      ticks: [5,10,15,20]
     },
     vAxis: {
       title: 'Price'
@@ -119,39 +159,23 @@ foreach ($dbh->query($dataPointQuery) as $row) {
     series: {
       0: {pointSize: 5}
     },
-    legend: { position: 'bottom' }
+    legend: { position: 'top' }
   };
 
   var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
   chart.draw(data, options);
 }
-    //date_default_timezone_set('GMT');
-    //ksort($dataPoints);
 
 </script>
 
-<?php
-  function setSelected($value) {
-    $period = $_GET['period'];
-    echo "/*" . $period . " " . $value . "*/";
-    if ($period == null && $value == 30) {
-      echo "selected";
-    } else if ($period == $value) {
-      echo "selected";
-    }
-  }
-?>
-
 <div class="tabcontent">
+  <div class="averagePrice">Average price: <?php echo $averagePrice == 0 ? "No data" : $averagePrice;?></div>
   <div id="chart_div"></div>
-    <div class="filters">
-      <input type="button" value="<<" onclick="executeFilter(-1);"></button>
-        <div class="date">
-          <input id="dateInput" class="dateInput" type="date" value="new Date().toDateInputValue()">
-        </div>
-        <input type="button" value=">>" onclick="executeFilter(1);"></button>
-    </div>
-
-
-
+  <div class="filters">
+    <input type="button" value="<<" onclick="executeFilter(-1);"></button>
+      <div class="date">
+        <input id="dateInput" class="dateInput" type="date" onchange="loadNewDate()" value="">
+      </div>
+      <input type="button" value=">>" onclick="executeFilter(1);"></button>
+  </div>
 </div>
