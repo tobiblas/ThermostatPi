@@ -52,7 +52,9 @@ print "-----------"
 print "adding php admin page for thermostat."
 print "installing php pages in /var/www/html/"
 
-print subprocess.Popen("sudo mkdir -p /var/www/html/thermostat && sudo cp -R php/* /var/www/html/thermostat", shell=True, stdout=subprocess.PIPE).stdout.read()
+print subprocess.Popen("sudo mkdir -p /var/www/html/thermostat && sudo cp -R php/*.php /var/www/html/thermostat", shell=True, stdout=subprocess.PIPE).stdout.read()
+print subprocess.Popen("sudo cp -R php/*.js /var/www/html/thermostat", shell=True, stdout=subprocess.PIPE).stdout.read()
+print subprocess.Popen("sudo cp -R php/*.css /var/www/html/thermostat", shell=True, stdout=subprocess.PIPE).stdout.read()
 
 print "-----------"
 
@@ -66,7 +68,7 @@ if not thermoPath.endswith("/"):
 print subprocess.Popen("cp -R thermostat/* " + thermoPath, shell=True, stdout=subprocess.PIPE).stdout.read()
 
 
-print "todo. add this to crontab: 0 4,15 * * * python /home/pi/thermometer/sense_remote_temp.py /var/www/html/thermometer 1> /home/pi/templog.txt 2> /home/pi/templog.err"
+print "todo. add this to crontab: 5 0 * * * python /home/pi/thermostat/getRemotePriceData.py /var/www/html/thermometer 1> /home/pi/templog.txt 2> /home/pi/templog.err"
 
 ##############################################################
 

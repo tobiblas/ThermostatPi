@@ -13,18 +13,13 @@ import datetime
 #
 
 # LEFT TO DO:
-# HAR FIXAT SÅ DET SPARAS I DATABASEN. FIXA SÅ DET FINNS EN
-# SEND MAIL (ERRORHANDLING)
-# SAVE TO DATABSE.
-#SEN: HA EN VY DÄR MAN VISAR: ELPRISET FÖR EN DAG. FÄRGKODAT FÖR VILKA TIMMAR VI INTE TILLÅTER >2grader och >1grader.
-# visa i denna vy även hur termostaten varit av eller på
+# Steg 1. Installera denna fil på thermostaten så att vi börjar spara data. crontab behövs.
+# FIXA SÅ DET FINNS EN SEND MAIL (ERRORHANDLING)
+# lägg in history view på thermostaten genom att deploya senaste.
 
 #så här skickar vi mail på alarmet:
 #shell_exec('echo "' . $content . '" | mail -s "' . $subject . '" ' . $address);
 #python kallar på php som kallar på bash.
-
-#kolla om backuplösningen med nordpool funkar fortfarande. URLen kanske ändras per dag?
-#fixa mail sen databas. sen kan vi installera skiten.
 
 def logError(message):
     print(message)
