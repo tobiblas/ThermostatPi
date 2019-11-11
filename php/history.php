@@ -91,6 +91,7 @@ $toDate = $theDate + 3600 * 24 -1;
 $dataPointQuery = "select price from pricedata where timestamp > " . $fromDate . " and timestamp < " . $toDate;
 $averagePrice = 0;
 $maxValue = 0;
+$minValue = 100;
 
 //This loop is just to get the average price.
 $i = 0;
@@ -98,6 +99,7 @@ foreach ($dbh->query($dataPointQuery) as $row) {
     $i = $i + 1;
     $averagePrice = $averagePrice + $row[0];
     $maxValue = $row[0] > $maxValue ? $row[0] : $maxValue;
+    $minValue = $row[0] < $minValue ? $row[0] : $minValue;
 }
 if ($i != 0) {
   $averagePrice = $averagePrice / $i;
@@ -106,7 +108,7 @@ if ($i != 0) {
 //get previous thermostatValue (toStatus for last thermostat change)
 $query = "select toStatus from status where timestamp < " . $fromDate;
 $lastThermostatValue = $dbh->query($query)->fetch()[0];
-$thermostatValue = $toStatus == -1 ? 0 : $maxValue;
+$thermostatValue = $toStatus == -1 ? $minValue : $maxValue;
 $normalDot = "#109618";
 $redDot = "#DC3912";
 $yellowDot = "#FF9900";
@@ -121,7 +123,7 @@ foreach ($dbh->query($dataPointQuery) as $row) {
       $query = "select toStatus from status where timestamp >= " . $fromTime . " and timestamp < " . $toTime . " order by timestamp desc limit 1";
       $newThermostatValue = $dbh->query($query)->fetch()[0];
       if ($newThermostatValue != null) {
-          $thermostatValue = $newThermostatValue == -1 ? 0 : $maxValue;
+          $thermostatValue = $newThermostatValue == -1 ? $minValue : $maxValue;
       }
     }
 
