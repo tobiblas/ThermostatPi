@@ -128,11 +128,11 @@ def setRelay(fromVal, toVal, average, targetTemp, threshold, outside):
     if (toVal == RELAY_ON):
         #turn on
         logStatus(fromVal, toVal, average, targetTemp, threshold, outside)
-        GPIO.output(RELAY_GPIO_PIN, True)
+        GPIO.output(RELAY_GPIO_PIN, False)
     elif (toVal == RELAY_OFF):
         #turn off
         logStatus(fromVal, toVal, average, targetTemp, threshold, outside)
-        GPIO.output(RELAY_GPIO_PIN, False)
+        GPIO.output(RELAY_GPIO_PIN, True)
 
 # returns [status, timestamp]
 def getLastStatus():
