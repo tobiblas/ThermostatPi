@@ -69,7 +69,7 @@ function drawChart() {
   data.addColumn('number', 'time');
   data.addColumn('number', 'price');
   data.addColumn({'type': 'string', 'role': 'style'});
-  data.addColumn('number', 'thermometer');
+  data.addColumn('number', 'thermostat on/off');
   data.addColumn('number', 'average');
   data.addColumn({'type': 'string', 'role': 'style'});
 
