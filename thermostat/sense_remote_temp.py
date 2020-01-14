@@ -75,6 +75,9 @@ def getMyProps():
     print myprops
     return myprops
 
+def getGlidingAverage():
+    return db.getGlidingAverage(getNow())
+
 def remoteFetchTemp(myprops):
     print "Fetching remote temp"
 
@@ -155,6 +158,8 @@ def main():
     temps = remoteFetchTemp(myprops)
     average = temps.get("average")
     outside = temps.get("outside")
+    mediumExpensiveBreakpoint = float(myprops['mediumExpensiveBreakpoint'])
+    expensiveBreakpoint = float(myprops['expensiveBreakpoint'])
 
     lastStatus = getLastStatus()
     lastStatusChangeTime = db.getLastStatusChange()
@@ -179,6 +184,11 @@ def main():
         print "gracetime not over yet. Return"
         return
 
+    glidingAverage = getGlidingAverage()
+    if (db.isExpensiveHour(getNow(), glidingAverage, 1.2)):
+        targetTemp += expensiveBreakpoint
+    elif (db.isExpensiveHour(getNow(), glidingAverage, 1.1)):
+        targetTemp += mediumExpensiveBreakpoint;
 
     # if average within threshold of targetTemp then do nothing and log STATUS_QUO
     if (average > targetTemp-threshold and average < targetTemp+threshold):

@@ -65,6 +65,36 @@ def getLastStatus():
     db[0].close()
     return result
 
+def isExpensiveHour(timestamp, glidingAverage, thersholdPercent):
+    sql = "select price from pricedata as t1 order by abs(t1.timestamp - " + timestamp + ") limit 1";
+    print "executing: " + sql;
+    db = getConnection()
+    db[1].execute(sql)
+    rows = db[1].fetchall()
+    result = 0
+    if rows:
+        result = rows[0][0]
+    else:
+        print ("No last status.")
+    db[0].close()
+    print "price now was: " + result;
+    print "gliding avg: " + glidingAverage;
+    return result * thersholdPercent > glidingAverage
+
+def getGlidingAverage(timestamp):
+    fromTime = timestamp - 3600 * 24 * 7
+    db = getConnection()
+    sql = "select avg(price) from pricedata where timestamp > " + fromTime + " and timestamp < " + timestamp;
+    db[1].execute(sql)
+    rows = db[1].fetchall()
+    result = 0
+    if rows:
+        result = rows[0][0]
+    else:
+        print ("No last status.")
+    db[0].close()
+    return result
+
 def savePrice(timestamp, price):
     db = getConnection()
     sql = "insert into pricedata values(" + str(getGmtTime(timestamp)) + "," + str(price) + ")"
