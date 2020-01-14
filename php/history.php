@@ -93,6 +93,11 @@ $averagePrice = 0;
 $maxValue = 0;
 $minValue = 100;
 
+$glidingAverageFrom = $fromDate - 3600 * 24 * 6;
+$glidingAverageQuery = "select avg(price) from pricedata where timestamp > " . $glidingAverageFrom . " and timestamp < " . $toDate;
+$stm = $dbh->query($glidingAverageQuery);
+$glidingAverage = $stm->fetch()[0];
+
 //This loop is just to get the average price.
 $i = 0;
 foreach ($dbh->query($dataPointQuery) as $row) {
@@ -128,9 +133,9 @@ foreach ($dbh->query($dataPointQuery) as $row) {
     }
 
     $dotColor = $normalDot;
-    if ($price > 1.2 * $averagePrice) {
+    if ($price > 1.2 * floatval($glidingAverage)) {
         $dotColor = $redDot;
-    } else if ($price > 1.1 * $averagePrice) {
+    } else if ($price > 1.1 * floatval($glidingAverage)) {
         $dotColor = $yellowDot;
     }
 
@@ -171,7 +176,8 @@ foreach ($dbh->query($dataPointQuery) as $row) {
 </script>
 
 <div class="tabcontent">
-  <div class="averagePrice">Average price: <?php echo $averagePrice == 0 ? "No data" : $averagePrice;?></div>
+  <div class="averagePrice">Average price: <?php echo $averagePrice == 0 ? "No data" : round($averagePrice,2);?></div>
+  <div class="averagePrice">7 day average price: <?php echo $glidingAverage == 0 ? "No data" : round($glidingAverage,2);?></div>
   <div id="chart_div"></div>
   <div class="filters">
     <input type="button" value="<<" onclick="executeFilter(-1);"></button>
