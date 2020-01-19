@@ -178,17 +178,21 @@ def main():
             setRelay(lastStatus, RELAY_ON, average, targetTemp, threshold, outside)
         return;
 
-    # if last status < gracetime then return.
+    #if last status < gracetime then return.
     print "now: " + str(getNow()) + " turnpoint: " + str(lastStatusChangeTime + graceTimeMinutes*60)
     if (getNow() < lastStatusChangeTime + graceTimeMinutes*60):
         print "gracetime not over yet. Return"
         return
 
     glidingAverage = getGlidingAverage()
+    print "Gliding average is " + str(glidingAverage)
+
     if (db.isExpensiveHour(getNow(), glidingAverage, 1.2)):
         targetTemp += expensiveBreakpoint
+        print "now is expensive hour. Adding to targetTemp " + str(expensiveBreakpoint)
     elif (db.isExpensiveHour(getNow(), glidingAverage, 1.1)):
         targetTemp += mediumExpensiveBreakpoint;
+        print "now is medium expensive hour. Adding to targetTemp " + str(mediumExpensiveBreakpoint)
 
     # if average within threshold of targetTemp then do nothing and log STATUS_QUO
     if (average > targetTemp-threshold and average < targetTemp+threshold):

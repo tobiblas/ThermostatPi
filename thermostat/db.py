@@ -22,8 +22,8 @@ def createTables(cursor):
 
 
 def getConnection():
-    #dbName = "/home/pi/temperature.db"
-    dbName = "/Users/tobiblas/Sites/ThermostatPi/thermostat.db"
+    dbName = "/home/pi/thermostat.db"
+    #dbName = "/Users/tobiblas/Sites/ThermostatPi/thermostat.db"
     conn = sqlite3.connect(dbName)
     cursor = conn.cursor()
     createTables(cursor)
@@ -66,8 +66,8 @@ def getLastStatus():
     return result
 
 def isExpensiveHour(timestamp, glidingAverage, thersholdPercent):
-    sql = "select price from pricedata as t1 order by abs(t1.timestamp - " + timestamp + ") limit 1";
-    print "executing: " + sql;
+    sql = "select price from pricedata as t1 order by abs(t1.timestamp - " + str(timestamp) + ") limit 1"
+    print ("executing: " + sql)
     db = getConnection()
     db[1].execute(sql)
     rows = db[1].fetchall()
@@ -77,14 +77,13 @@ def isExpensiveHour(timestamp, glidingAverage, thersholdPercent):
     else:
         print ("No last status.")
     db[0].close()
-    print "price now was: " + result;
-    print "gliding avg: " + glidingAverage;
-    return result * thersholdPercent > glidingAverage
+    print "isExpensiveHour found price: " + str(result)
+    return result > thersholdPercent * glidingAverage
 
 def getGlidingAverage(timestamp):
     fromTime = timestamp - 3600 * 24 * 7
     db = getConnection()
-    sql = "select avg(price) from pricedata where timestamp > " + fromTime + " and timestamp < " + timestamp;
+    sql = "select avg(price) from pricedata where timestamp > " + str(fromTime) + " and timestamp < " + str(timestamp);
     db[1].execute(sql)
     rows = db[1].fetchall()
     result = 0
