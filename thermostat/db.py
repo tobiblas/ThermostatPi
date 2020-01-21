@@ -66,19 +66,44 @@ def getLastStatus():
     return result
 
 def isExpensiveHour(timestamp, glidingAverage, thersholdPercent):
-    sql = "select price from pricedata as t1 order by abs(t1.timestamp - " + str(timestamp) + ") limit 1"
+    sql = "select price, (t1.timestamp - " + str(timestamp) + ") as offset from pricedata as t1 order by abs(t1.timestamp - " + str(timestamp) + ") limit 2"
+    #this query will return result like: 20.1, -300 | 24.2, 3300    this means we are 300 sekonds after closest point and 3300 seconds before next.  
+    
     print ("executing: " + sql)
     db = getConnection()
     db[1].execute(sql)
     rows = db[1].fetchall()
     result = 0
+    offset = 0
+    result2 = -1
+    offset2 = -1
     if rows:
         result = rows[0][0]
+        offset = rows[0][1]
+        if len(rows) == 2:
+            result2 = rows[1][0]
+            offset2 = rows[1][1]
     else:
         print ("No last status.")
     db[0].close()
-    print "isExpensiveHour found price: " + str(result)
-    return result > thersholdPercent * glidingAverage
+    print ("isExpensiveHour found price: " + str(result) + "," + str(result2) + " offsets: " + str(offset) + "," + str(offset2) )
+    if (result2 == -1 and offset2 == -1):
+        print ("only one dot of data")
+        return result > thersholdPercent * glidingAverage
+    closestIsExpensive = result > thersholdPercent * glidingAverage
+    secondIsExpensive = result2 > thersholdPercent * glidingAverage
+    #return result > thersholdPercent * glidingAverage
+    if closestIsExpensive and secondIsExpensive:
+        print ("Between two expensive dots")
+        return True;
+    if closestIsExpensive and secondIsExpensive != True:
+        print ("Closest is expensive")
+        return True;
+    if closestIsExpensive != True and secondIsExpensive:
+        print ("Second closest is expensive")
+        return offset > 0
+    print ("not expensive hour") 
+    return False
 
 def getGlidingAverage(timestamp):
     fromTime = timestamp - 3600 * 24 * 7
