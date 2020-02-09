@@ -1,6 +1,6 @@
-I use this software on a raspberry pi connected to a relay. The relay controls a pump which pums the water around in my heating system. 
+I use this software on a raspberry pi connected to a relay. The relay controls a pump which pumps the water around in my heating system. 
 
-The software uses 1-many sources of temperatura data to determine wether the pump should be on or off. I also fetches electricity price data for Sweden which can optionally be used in the decision to turn on/off the pump
+The software uses 1-many sources of temperature data to determine whether the pump should be on or off. It also fetches electricity price data for Sweden which can optionally be used in the decision to turn on/off the pump
 
 This setup saves me ~10% of my electricity bill since I can avoid heating my house on expensive hours.
 
