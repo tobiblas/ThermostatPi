@@ -69,9 +69,11 @@ def getPriceDataNordPool():
 
 #Gets data for same day as request is made. Breakpoint for new data seems to be midnight
 def getPriceDataElenDotNu():
-    page = getPage('https://elen.nu/timpriser-pa-el-for-elomrade-se4-malmo')
+    print('getting data from elen.nu')
+    page = getPage('https://elen.nu/dagens-spotpris/se4-malmo/')
+    print('Got page ' + str(page.text))
     if (page == None):
-        page = getPage('https://elen.nu/timpriser-pa-el-for-elomrade-se4-malmo')
+        page = getPage('https://elen.nu/dagens-spotpris/se4-malmo/')
         if (page == None):
             logError("Error for getting page elen.nu")
             return None
@@ -79,7 +81,7 @@ def getPriceDataElenDotNu():
     if (soup == None):
         logError("Error for getting soup elen.nu")
         return None
-    tableDatas = soup.find("table", class_="table-striped").find_all("td")
+    tableDatas = soup.find("table", class_="w-full").find_all("td")
     today = time.strftime('%Y-%m-%d')
     if today not in tableDatas[0].getText():
         logError("Could not find data for correct date " + today)
@@ -91,7 +93,7 @@ def getPriceDataElenDotNu():
             i = i + 1
             continue
         priceString = tableDatas[i].getText()
-        result.append(float(priceString.split("öre")[0].strip()))
+        result.append(float(priceString.split("öre")[0].strip().replace(',', '.')))
         i = i + 1
     return result
 
@@ -115,7 +117,7 @@ def getPriceData():
 
 def getAndSaveDataForToday():
     priceList = getPriceData()
-
+    print(str(priceList))
     if (priceList != None):
         dt = datetime.datetime.now()
         currentHour = 0
